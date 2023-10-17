@@ -1,5 +1,5 @@
 <?php
-//Declaramos variables con los parametros para conexión a la base de datos
+//DEXLARAMOS VARIABLES CON LOS PARAMETROS PARA CONEXIÓN A LA BASE DE DATOS
 $host_db = "localhost";
 $usuario_db = "root";
 $password_db = "";
@@ -9,34 +9,45 @@ $nombre_db = "api_web_db";
 $conexion = new mysqli($host_db, $usuario_db, $password_db, $nombre_db);
 
 //COMPROBAMOS QUE LA CONEXION ESTE FUNCIONANDO CORRECTAMENTE
-if ($conexion -> connect_error) {
+if ($conexion -> connect_error) { //SI CONEXIÓN VIENE CON UN ERROR ENTONCES MUESTRE EL ERROR
     die ("Conexión no establecida" . $conexion->connect_error);
 }
 
 
-header("Content-Type: application/json"); //GENERAMOS EL FORMATO DE DOCUMENTO DE RESPUESTA DE LA API
+header("Content-Type: application/json"); //GENERAMOS EL FORMATO DE DOCUMENTO DE RESPUESTA DE LA API EN ESTE CASO JSON
 $metodo = $_SERVER['REQUEST_METHOD']; //NOS MUESTRA QUE METODOS SE ESTAN UTILIZANDO EN ESTE MOMENTO
 
-switch ($metodo) {
+//OBTENEMOS EL ID POR MEDIO DE LA RUTA O URL
+$path = isset($_SERVER['PATH_INFO']) ? $_SERVER['PATH_INFO']:'/'; //PREGUNTAMOS SI VIENE ALGO EN EL PATH_INFO Y SI VIENE LO ASIGNAMOS A LA VARIABLE PATH Y LE AGREGAMOS UN / AL FINAL
+$buscar_id = explode('/', $path); //BUSCAMOS Y EXTRAEMOS EL ID QUE VIENE EN LA URL
+$id = ($path!=='/') ? end($buscar_id):null; //ASIGNAMOS EL ID QUE VIENE EN LA URL A LA VARIABLE ID
+
+switch ($metodo) { //POR MEDIO DEL CASE IDENTIFICAMOS EL TIPO DE PETICIÓN (GET, POST, PUT, DELETE O DEFAULT PARA LAS DEMÁS)
     case 'GET': //SELECT
-        consulta_select($conexion);
+        consultar($conexion, $id); //INVOCAMOS LA FUNCIÓN CONSULTAR
         break;
     case 'POST': //INSERT 
-        echo 'Consulta de registros - POST';
+        insertar($conexion); //INVOCAMOS LA FUNCIÓN INSERTAR
         break;
     case 'PUT': //UPDATE 
-        echo 'Consulta de registros - PUT';
+        actualizar($conexion, $id); //INVOCAMOS LA FUNCIÓN ACTUALIZAR
         break;
     case 'DELETE': //DELETE 
-        echo 'Consulta de registros - DELETE';
+        borrar($conexion, $id); //INVOCAMOS LA FUNCIÓN BORRAR
         break;
     default: //SI NO ES NINGUNO DE LOS METODOS ANTERIORES ENMASCARA TODOS LOS DEMAS EN UN ERROR
         echo 'Método no permitido';
         break;
 }
 
-function consulta_select($conexion){
-    $sql = "SELECT * FROM usuario";
+//FUNCIÓN PARA CONSULTAR A LA BASE DE DATOS
+function consultar($conexion, $id){
+    if (isset($id)) {
+        $sql = "SELECT * FROM usuario WHERE id_usuario = " . $id;
+    }else {
+        $sql = "SELECT * FROM usuario";
+    }
+    
     $resultado = $conexion -> query($sql);
 
     if ($resultado) {
@@ -49,7 +60,39 @@ function consulta_select($conexion){
     }
 }
 
+//FUNCIÓN PARA INSERTAR REGISTROS A LA BASE DE DATOS
+function insertar($conexion){
+    $datos = json_decode(file_get_contents('php://input'),true);
+    $nombre = $datos['nombre'];
+    
+    $sql = "INSERT INTO usuario(nombre_usuario) VALUES('$nombre')";
+    $resultado = $conexion -> query($sql);
 
+    if ($resultado) {
+        $datos['id'] = $conexion -> insert_id;
+        echo json_encode($datos);
+    }else {
+        echo json_encode(array('error'=>'Error al crear usuario'));
+    }
+}
+
+//FUNCIÓN PARA BORRAR REGISTROS DE LA BASE DE DATOS
+function borrar($conexion, $id){
+    $sql = "DELETE FROM usuario WHERE id_usuario = " . $id;
+    $resultado = $conexion -> query($sql);
+
+    if ($resultado) {
+        echo json_encode(array('mensaje' => 'Usuario eliminado. Se ha borrado el usuario con el ID '.$id ));
+    }else {
+        echo json_encode(array('error' => 'Error al borrar el usuario'));
+    }
+}
+
+//FUNCIÓN PARA ACTUALIZAR REGISTROS DE LA BASE DE DATOS
+function actualizar($conexion, $id){
+    echo 'El ID a editar es: ' . $id;
+
+}
 
 
 ?>
