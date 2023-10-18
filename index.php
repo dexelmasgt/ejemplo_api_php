@@ -1,5 +1,5 @@
 <?php
-//DEXLARAMOS VARIABLES CON LOS PARAMETROS PARA CONEXIÓN A LA BASE DE DATOS
+//DECLARAMOS VARIABLES CON LOS PARAMETROS PARA CONEXIÓN A LA BASE DE DATOS
 $host_db = "localhost";
 $usuario_db = "root";
 $password_db = "";
@@ -42,11 +42,15 @@ switch ($metodo) { //POR MEDIO DEL CASE IDENTIFICAMOS EL TIPO DE PETICIÓN (GET,
 
 //FUNCIÓN PARA CONSULTAR A LA BASE DE DATOS
 function consultar($conexion, $id){
-    if (isset($id)) {
-        $sql = "SELECT * FROM usuario WHERE id_usuario = " . $id;
-    }else {
-        $sql = "SELECT * FROM usuario";
-    }
+    //FORMA LARGA
+    // if (isset($id)) {
+    //     $sql = "SELECT * FROM usuario WHERE id_usuario = " . $id;
+    // }else {
+    //     $sql = "SELECT * FROM usuario";
+    // }
+
+    //FORMA CORTA
+    $sql = ($id===null) ? "SELECT * FROM usuario" : "SELECT * FROM usuario WHERE id_usuario = " . $id;
     
     $resultado = $conexion -> query($sql);
 
@@ -58,12 +62,13 @@ function consultar($conexion, $id){
 
         echo json_encode($datos);
     }
+
 }
 
 //FUNCIÓN PARA INSERTAR REGISTROS A LA BASE DE DATOS
 function insertar($conexion){
     $datos = json_decode(file_get_contents('php://input'),true);
-    $nombre = $datos['nombre'];
+    $nombre = $datos['nombre_usuario'];
     
     $sql = "INSERT INTO usuario(nombre_usuario) VALUES('$nombre')";
     $resultado = $conexion -> query($sql);
@@ -90,8 +95,17 @@ function borrar($conexion, $id){
 
 //FUNCIÓN PARA ACTUALIZAR REGISTROS DE LA BASE DE DATOS
 function actualizar($conexion, $id){
-    echo 'El ID a editar es: ' . $id;
+    $datos = json_decode(file_get_contents('php://input'),true);
+    $nombre = $datos['nombre_usuario'];
+    
+    $sql = "UPDATE usuario SET nombre_usuario = '$nombre' WHERE id_usuario = $id";
+    $resultado = $conexion -> query($sql);
 
+    if ($resultado) {
+        echo json_encode(array('mensaje' => 'Usuario editado. Se ha editado el usuario con el ID ' . $id . ' y el nombre nuevo es: ' . $nombre));
+    }else {
+        echo json_encode(array('error' => 'Error al editar el usuario'));
+    }
 }
 
 
