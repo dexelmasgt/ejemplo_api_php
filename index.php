@@ -1,5 +1,7 @@
 <?php
 //DECLARAMOS VARIABLES CON LOS PARAMETROS PARA CONEXIÓN A LA BASE DE DATOS
+
+//Hoy 23-11-2023 se hace una prueba de programar en el iPad
 $host_db = "localhost";
 $usuario_db = "root";
 $password_db = "";
